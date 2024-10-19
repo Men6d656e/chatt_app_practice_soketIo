@@ -4,6 +4,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 import http from 'http';
+import { Server } from 'socket.io';
+
 
 dotenv.config({
     path : './.env'
@@ -14,12 +16,16 @@ const app = express();
 
 const server = http.createServer(app);
 
+// soket io nes server
+const io = new Server(server , {
+    cors :{
+        origin :'http://localhost:3000',
+        methods : [ 'GET' , "POST" ],
+        credentials : true
+    }
+});
 
-app.use(cors({
-    origin: "*",
-    Credential : true,
-
-}))
+app.use(cors())
 
 
 app.use(express.json());
@@ -38,23 +44,25 @@ const connectDb = async function(){
         process.exit(1);
     }
 }
-
-
-connectDb()
-.then(()=>{
+connectDb().then(()=>{
     server.on("error: " , (error)=>{
         console.log("ERROR : " , error);
     })
     server.listen(process.env.PORT || 8000 , () => {
         console.log(`server started at port: ${process.env.PORT}`);
     })
-})
-.catch((error) => {
+}).catch((error) => {
     console.log("MongoDb connection error !!!" , error)
 })
-
 
 // routes
 app.get('/' , (req ,res)=> {
     return res.json( "message")
+})
+
+
+
+// socket .io 
+io.on('connection' , (socket) => {
+    console.log('A new Connection', socket.id )
 })
